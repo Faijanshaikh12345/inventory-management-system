@@ -1,0 +1,75 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Sale extends Model
+{
+    use HasFactory;
+
+    protected $guarded = [];
+
+    protected $casts = [
+        'sale_date'   => 'date',
+        'grand_total' => 'decimal:2',
+    ];
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
+    }
+
+    public function items()
+    {
+        return $this->hasMany(SaleItem::class);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Helpers
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Auto-generate Invoice Number:
+     * SAL-YYYYMMDD-0001
+     */
+    public static function generateInvoiceNo(): string
+    {
+        $prefix = 'SAL-' . date('Ymd') . '-';
+
+        $last = self::where('invoice_no', 'like', $prefix . '%')
+            ->orderBy('id', 'desc')
+            ->first();
+
+        $next = $last
+            ? (int) substr($last->invoice_no, -4) + 1
+            : 1;
+
+        return $prefix . str_pad($next, 4, '0', STR_PAD_LEFT);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Accessors
+    |--------------------------------------------------------------------------
+    */
+
+    public function getStatusBadgeAttribute(): string
+    {
+        return match ($this->status) {
+            'completed' => '<span class="badge badge-success">Completed</span>',
+            'pending'   => '<span class="badge badge-warning">Pending</span>',
+            'cancelled' => '<span class="badge badge-danger">Cancelled</span>',
+            default     => '<span class="badge badge-secondary">' . $this->status . '</span>',
+        };
+    }
+}
