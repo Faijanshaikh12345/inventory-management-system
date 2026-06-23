@@ -12,7 +12,8 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UnitController;
 use Illuminate\Support\Facades\Route;
 
-
+Route::get('/', [DashboardController::class, 'showLoginForm'])
+    ->name('login');
 
 Route::get('/login', [DashboardController::class, 'showLoginForm'])
     ->name('login');
